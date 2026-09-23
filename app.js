@@ -230,6 +230,8 @@
       loopRow.classList.add('ready');
       srcBtn.classList.add('ready');
       permissionUnlocked = true;
+
+      checkSilence(liveSource);
     } catch (err) {
       console.error(err);
       errorMsg.style.display = 'block';
@@ -237,6 +239,22 @@
     } finally {
       starting = false;
     }
+  }
+
+  function checkSilence(liveSource) {
+    const analyser = audioCtxRaw.createAnalyser();
+    analyser.fftSize = 512;
+    liveSource.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    setTimeout(() => {
+      analyser.getByteTimeDomainData(data);
+      let maxDiff = 0;
+      for (let i = 0; i < data.length; i++) maxDiff = Math.max(maxDiff, Math.abs(data[i] - 128));
+      if (maxDiff < 2) {
+        errorMsg.style.display = 'block';
+        errorMsg.innerText = '選んだ入力から音が来ていません（他のアプリの出力先がこのデバイスになっているか確認してください）';
+      }
+    }, 3000);
   }
 
   renderLoopDots();
@@ -270,7 +288,11 @@
   srcSelect.addEventListener('change', async (e) => {
     selectedDeviceId = e.target.value;
     srcSelect.style.display = 'none';
-    if (ready) await switchInputDevice(selectedDeviceId);
+    if (ready) {
+      await switchInputDevice(selectedDeviceId);
+    } else {
+      await startAudio();
+    }
   });
   srcSelect.addEventListener('blur', () => { srcSelect.style.display = 'none'; });
 
