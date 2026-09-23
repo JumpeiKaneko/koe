@@ -53,3 +53,15 @@ html, body {
   font-size: 0.7rem; color: #cc0000; letter-spacing: 0.05em;
   display: none;
 }
+
+#src-picker-btn {
+  position: fixed; top: 16px; left: 16px; width: 10px; height: 10px; border-radius: 50%;
+  border: 1px solid #cccccc; cursor: pointer; z-index: 20; background: transparent;
+}
+#src-picker-btn.ready { border-color: #111111; }
+#src-select {
+  position: fixed; top: 12px; left: 32px; z-index: 21;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+  font-size: 0.65rem; max-width: 220px; display: none;
+  border: 1px solid #cccccc; background: #ffffff; color: #111111; padding: 2px 4px;
+}

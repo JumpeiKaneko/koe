@@ -5,6 +5,11 @@
   const padBall = document.getElementById('pad-ball');
   const loopRow = document.getElementById('loop-row');
   const errorMsg = document.getElementById('error-msg');
+  const srcBtn = document.getElementById('src-picker-btn');
+  const srcSelect = document.getElementById('src-select');
+
+  let selectedDeviceId = null;
+  let permissionUnlocked = false;
 
   const RADIUS = 140; // #pad-outer の半径（CSSの280pxと合わせる）
   const PAD_COUNT = 6;
@@ -209,7 +214,9 @@
     try {
       await Tone.start();
       audioCtxRaw = Tone.getContext().rawContext;
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : true
+      });
       padRecorderMimeType = getSupportedMimeType();
 
       chainEntry = buildChain();
@@ -221,6 +228,8 @@
       ready = true;
       padOuter.classList.add('ready');
       loopRow.classList.add('ready');
+      srcBtn.classList.add('ready');
+      permissionUnlocked = true;
     } catch (err) {
       console.error(err);
       errorMsg.style.display = 'block';
@@ -231,4 +240,49 @@
   }
 
   renderLoopDots();
+
+  // ---- 入力デバイス選択（マイク以外＝仮想オーディオデバイス等も選べるようにする） ----
+  srcBtn.addEventListener('click', async () => {
+    try {
+      if (!permissionUnlocked) {
+        // ラベル（デバイス名）はマイク許可を一度得ないと取得できない仕様のため、先に許可だけ取る
+        const tmp = await navigator.mediaDevices.getUserMedia({ audio: true });
+        tmp.getTracks().forEach(t => t.stop());
+        permissionUnlocked = true;
+      }
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const inputs = devices.filter(d => d.kind === 'audioinput');
+      srcSelect.innerHTML = '';
+      inputs.forEach((d, i) => {
+        const opt = document.createElement('option');
+        opt.value = d.deviceId;
+        opt.innerText = d.label || `入力デバイス ${i + 1}`;
+        srcSelect.appendChild(opt);
+      });
+      if (selectedDeviceId) srcSelect.value = selectedDeviceId;
+      srcSelect.style.display = 'block';
+      srcSelect.focus();
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  srcSelect.addEventListener('change', async (e) => {
+    selectedDeviceId = e.target.value;
+    srcSelect.style.display = 'none';
+    if (ready) await switchInputDevice(selectedDeviceId);
+  });
+  srcSelect.addEventListener('blur', () => { srcSelect.style.display = 'none'; });
+
+  async function switchInputDevice(deviceId) {
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: deviceId } } });
+      if (micStream) micStream.getTracks().forEach(t => t.stop());
+      micStream = newStream;
+      const newSource = audioCtxRaw.createMediaStreamSource(micStream);
+      Tone.connect(newSource, chainEntry);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 })();
