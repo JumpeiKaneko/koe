@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>声を聴く</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+</head>
+<body>
+
+  <!-- ============================================== -->
+  <!-- スタートモーダル -->
+  <!-- ============================================== -->
+  <div id="start-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>声を聴く</h2>
+      <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 30px;">
+        マイクの声をその場でエフェクト加工しながら、断片をパッドに録って重ねていく即興用のツールです。
+      </p>
+      <button id="btn-start" class="record-btn-boxed">マイクを起動する</button>
+      <div id="start-error" style="display:none; color: var(--danger); font-size: 0.65rem; margin-top: 16px;"></div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- メイン画面 -->
+  <!-- ============================================== -->
+  <div class="container" id="main-app" style="display: none;">
+    <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <h1 style="margin: 0; font-size: 1.15rem; font-weight: 400; letter-spacing: 0.25em; color: var(--text-main);">声を聴く</h1>
+        <span class="live-badge"><span class="live-dot" id="live-dot"></span>LIVE</span>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="btn-mute" class="action-btn" style="border:1px solid var(--line-color); padding:4px 10px; border-radius:4px;">MUTE</button>
+        <button id="btn-stop-pads" class="action-btn" style="border:1px solid var(--line-color); padding:4px 10px; border-radius:4px;">全パッド停止</button>
+      </div>
+    </header>
+
+    <div class="section">
+      <div class="section-title">Input Waveform</div>
+      <div class="scope-wrap"><canvas id="scope-canvas"></canvas></div>
+      <div class="section-title">Spectrum</div>
+      <div class="scope-wrap spectrum"><canvas id="spectrum-canvas"></canvas></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Master</div>
+      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:180px;">
+          <div class="mini-param-row"><span>Volume</span><span class="val" id="val-master">0dB</span></div>
+          <input type="range" id="knob-master" min="-40" max="6" step="1" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Signal Chain（声とパッドは同じチェーンを通ります）</div>
+      <div class="modules-grid" id="modules"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Loop Pads</div>
+      <div class="pads-grid" id="pads"></div>
+    </div>
+
+    <p style="font-size: 0.6rem; color: var(--text-muted); line-height: 1.9; margin-top: 10px;">
+      パッドは1回タップで録音開始、もう一度タップで録音終了、以後タップで再生/停止します（数字キー1〜6でも操作できます）。<br>
+      各モジュールのスイッチはON/OFF、MIXは掛かり具合です。ECHOのTAPを連打するとテンポに合わせてディレイタイムが決まります。
+    </p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
